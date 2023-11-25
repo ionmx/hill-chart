@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hill Chart (Proof of Concept)</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2em;
+    }
+    h1, h3 {
+      margin: 0;
+      padding: 0;
+    }
+    h3 {
+      font-weight: 100;
+    }
+    #chart {
+      width: 800px;
+      margin: 1em auto;
+    }
+    #hill-container {
+      margin-top: 1em;
+    }
+    .dot {
+      user-select: none;
+    }
+    .dot:hover {
+      cursor: move;
+    }
+    .instructions {
+      border: 1px solid #ddd;
+      background-color: #eee;
+      border-radius: 9999px;
+      padding: 0.2em 1em;
+      font-size: 0.8em;
+      color: #777;
+    }
+    .labels {
+      padding-top: 0.5em;
+      font-size: 0.8em;
+      color: #777;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .notes {
+      margin-top: 6em;
+      font-size: 0.8em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hill Chart</h1>
+  <h3>Proof of Concept</h3>
+
+  <div id="chart">
+    <span class="instructions">Drag each dot to adjust its position on the chart</span>
+    <svg id="hill-container" viewbox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg">
+      <path
+         id="hill-path"
+         style="fill:none;stroke:#CCCCCC;stroke-width:2;stroke-opacity:1"
+         d="M 10,290
+            C 290,290
+              290,15
+              500,15
+            C 700,15
+              700,290
+              990,290"
+      />
+      <line x1="500" y1="15" x2="500" y2="290" stroke="#CCCCCC" stroke-dasharray="5,5" />
+      <line x1="0" y1="300" x2="1000" y2="300" stroke="#CCCCCC" />
+    </svg>
+    <div class="labels">
+      <div class="">FIGURING THINGS OUT</div>
+      <div class="">MAKING IT HAPPEN</div>
+    </div>
+  </div>
+  <p class="notes">Vanilla JS implementation of <a href="https://basecamp.com/shapeup/3.4-chapter-13">Basecamp / Shape Up / Hill Chart</a></p>
+
+  <script>
+    const svgns = "http://www.w3.org/2000/svg";
+    const container = document.getElementById('hill-container');
+    const path = document.getElementById('hill-path');
+    const length = path.getTotalLength();
+    const box = container.getBoundingClientRect();
+    const dots = [
+      { id: "dot1", value: 15, color: "#FF9130", label: "Release Monkey Factory" },
+      { id: "dot2", value: 30, color: "#39A7FF", label: "Implement Artificial Womb"},
+      { id: "dot3", value: 55, color: "#9ADE7B", label: "Enable Banana Feeder" },
+      { id: "dot4", value: 75, color: "#7743DB", label: "Monkey Cloner MVP" }
+    ];
+    let selectedDot = null;
+
+    const moveDot = (dot, val) => {
+      const { x, y } = path.getPointAtLength(val / 100 * length);
+      dot.setAttribute('transform', `translate(${x} ${y})`);
+    }
+
+    const selectDot = (dot) => {
+      selectedDot = dot;
+      selectedDot.getElementsByTagName('circle')[0].setAttribute("r", 13);
+    }
+
+    const endMove = () => {
+      selectedDot.getElementsByTagName('circle')[0].setAttribute("r", 10);
+      selectedDot = null;
+    }
+
+    const addDotsToChart = () => {
+      dots.forEach((dot) => {
+        const g = document.createElementNS(svgns,"g");
+        const circle = document.createElementNS(svgns, "circle");
+        const text = document.createElementNS(svgns, "text");
+        const textNode = document.createTextNode(dot.label);
+
+        g.setAttribute("id", dot.id);
+        g.setAttribute("class", "dot");
+        circle.setAttribute("r", 10);
+        circle.setAttribute("fill", dot.color);
+        g.addEventListener("mousedown",  () => { selectDot(g) });
+        text.setAttribute("x", "15");
+        text.setAttribute("y", "5");
+        text.appendChild(textNode);
+
+        g.appendChild(circle);
+        g.appendChild(text);
+        container.appendChild(g);
+        moveDot(g, dot.value);
+      });
+    }
+    addDotsToChart();
+
+
+    container.addEventListener("mousemove", (event) => {
+      if (!selectedDot) {
+       return
+      }
+      const x = (event.clientX - box.left) / box.width
+      moveDot(selectedDot, x * 100);
+    });
+    container.addEventListener("mouseleave", () => { endMove() });
+    container.addEventListener("mouseup", () => { endMove() });
+  </script>
+</body>
+</html>
